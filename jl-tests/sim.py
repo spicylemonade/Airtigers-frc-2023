@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 sys.path.append ('\Simulations')
 import numpy as np
@@ -35,7 +36,7 @@ class Robot:
     slide_friction = 5;
     I_arm = 0.3; 						 # Inertia of the arm (INCORRECT NEED TO COMPUTE)
     pistonForce = (60*math.pi*(1.5/2)**2)*4.4482189159; # Force of the piston
-
+    maxArmTorque = 166.4;
     # Roller Claw
     claw_mass = 10 * (0.453592); 		 # Mass of the roller claw
     claw_length = 12 * (0.0254);		 	 # Length of the claw
@@ -139,7 +140,7 @@ class game_field:
         plt.plot(LeftlowerRamp_x,LeftlowerRamp_y,'-',color=[0/255,0/255,0/255]);
         plt.plot(RightlowerRamp_x,RightlowerRamp_y,'-',color=[0/255,0/255,0/255]);
         plt.ylim([0,2]);
-        #ax.axis('equal');
+        ax.axis('equal');
         plt.grid();
 
 def main():
@@ -382,6 +383,8 @@ def Inputs(x,xDot,y,yDot,theta,thetaDot,arm_theta,arm_thetaDot,l1,l1Dot):
         U = balanced_Controller(x,xDot,y,yDot,theta,thetaDot,arm_theta,arm_thetaDot,l1,l1Dot);
     # 		pdb.set_trace();
     # 	pdb.set_trace();
+    if(U[2]>= Robot.maxArmTorque):
+         U[2]= Robot.maxArmTorque;
     return U;
 
 def scoring_Controller(x,xDot,y,yDot,theta,thetaDot,arm_theta,arm_thetaDot,l1,l1Dot):
@@ -389,7 +392,7 @@ def scoring_Controller(x,xDot,y,yDot,theta,thetaDot,arm_theta,arm_thetaDot,l1,l1
     # To score we must drive forward, position the arm, and release the cube on the top level
     x_ref = 0; # this is the target position to score (DRIVE ROBOT TO THIS POINT)
     arm_theta_ref = 0; # this is the target arm orientation (DRIVE THE ARM TO THIS ORIENTATION)
-    arm_length_ref = Robot.arm_length_max; # this is the target arm length
+    arm_length_ref = Robot.arm_length_min; # this is the target arm length
 
     K_drive = -0.3; # this is the control gain for driving the robot during scroring
     K_speed = 0.4; # this is the control gain for the robots speed.
@@ -408,7 +411,10 @@ def scoring_Controller(x,xDot,y,yDot,theta,thetaDot,arm_theta,arm_thetaDot,l1,l1
     U[0] = K_drive*err[0] + K_speed*err[1];
     U[1] = -U[0];
     U[2] = K_arm_orient*err[2] + K_arm_ang_vel*err[3];
-    # 	pdb.set_trace()
+
+    if(arm_theta <= 5*(math.pi)/180):
+       ref[4]=Robot.arm_length_max
+        #pdb.set_trace()
     if(ref[4]==Robot.arm_length_max):
         U[3] = Robot.pistonForce;
     elif(ref[4]==Robot.arm_length_min):
@@ -460,8 +466,10 @@ def mobility_Controller(x,xDot,y,yDot,theta,thetaDot,arm_theta,arm_thetaDot,l1,l
 def balanced_Controller(x,xDot,y,yDot,theta,thetaDot,balanced,arm_theta,arm_thetaDot,l1,l1Dot):
     # To balance the robot on the charging station, we must drive forward onto the charging station and changle our position unitl the platform is level
     U = np.zeros((6,1)); # Predefine the robot's control input as a vector
+    
     # compute input
     return U
 
 scored,mobility,balanced = False,False,False;
 main()
+
