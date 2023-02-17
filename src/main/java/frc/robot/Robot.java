@@ -1,98 +1,103 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
+// the WPILib BSD license file in the root directory of this project
 package frc.robot;
-
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.drive.MecanumDrive;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-/**
- * The VM is configured to automatically run this class, and to call the functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the name of this class or
- * the package after creating this project, you must also update the build.gradle file in the
- * project.
- */
-public class Robot extends TimedRobot {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
-  private String m_autoSelected;
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
+public class Robot extends TimedRobot 
+{
 
-  /**
-   * This function is run when the robot is first started up and should be used for any
-   * initialization code.
-   */
-  @Override
-  public void robotInit() {
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_chooser);
-  }
+	Joystick joystick = new Joystick(0);
+	PS4Controller ps4 = new PS4Controller(1);
+	Timer time = new Timer();
 
-  /**
-   * This function is called every robot packet, no matter the mode. Use this for items like
-   * diagnostics that you want ran during disabled, autonomous, teleoperated and test.
-   *
-   * <p>This runs after the mode specific periodic functions, but before LiveWindow and
-   * SmartDashboard integrated updating.
-   */
-  @Override
-  public void robotPeriodic() {}
+	CANSparkMax frontLeftMotor = new CANSparkMax(1,MotorType.kBrushless); 
+	CANSparkMax backLeftMotor = new CANSparkMax(2, MotorType.kBrushless); 
+	CANSparkMax frontRightMotor = new CANSparkMax(4, MotorType.kBrushless); 
+	CANSparkMax backRightMotor = new CANSparkMax(3, MotorType.kBrushless);
+	MecanumDrive drivetrain = new MecanumDrive(frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor);
 
-  /**
-   * This autonomous (along with the chooser code above) shows how to select between different
-   * autonomous modes using the dashboard. The sendable chooser code works with the Java
-   * SmartDashboard. If you prefer the LabVIEW Dashboard, remove all of the chooser code and
-   * uncomment the getString line to get the auto name from the text box below the Gyro
-   *
-   * <p>You can add additional auto modes by adding additional comparisons to the switch structure
-   * below with additional strings. If using the SendableChooser make sure to add them to the
-   * chooser code above as well.
-   */
-  @Override
-  public void autonomousInit() {
-    m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-    System.out.println("Auto selected: " + m_autoSelected);
-  }
+	CANSparkMax armJoint = new CANSparkMax(5, MotorType.kBrushless);
+	CANSparkMax wristJoint = new CANSparkMax(6, MotorType.kBrushless);
+	CANSparkMax claw = new CANSparkMax(7, MotorType.kBrushless);
+	CANSparkMax leftIntake = new CANSparkMax(8, MotorType.kBrushless);
+	CANSparkMax rightIntake = new CANSparkMax(9, MotorType.kBrushless);
+	DifferentialDrive intake = new DifferentialDrive(leftIntake, rightIntake);
+	Solenoid armExtend = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
+	Solenoid armRetract = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+	Boolean setPWM = true;
 
-  /** This function is called periodically during autonomous. */
-  @Override
-  public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
-  }
+	@Override
+	public void robotInit() 
+	{
+	frontRightMotor.setInverted(true);
+	backRightMotor.setInverted(true);
+	frontLeftMotor.getEncoder().setPosition(0.0);
+	backLeftMotor.getEncoder().setPosition(0.0);
+	frontRightMotor.getEncoder().setPosition(0.0);
+	backRightMotor.getEncoder().setPosition(0.0);
+	}
 
-  /** This function is called once when teleop is enabled. */
-  @Override
-  public void teleopInit() {}
+	@Override
+	public void teleopInit()
+	{
+	
+	}
+	
+	@Override
+	public void teleopPeriodic() 
+	{
+		drivetrain.driveCartesian(Helper.scaleInput(joystick.getY()), Helper.scaleInput(joystick.getX()), Helper.scaleInput(joystick.getZ()));
+		armJoint.set(Helper.scaleInput(ps4.getLeftY()));
+		wristJoint.set(Helper.scaleInput(ps4.getRightY()));
+		claw.set(Helper.scaleInput(ps4.getRightX()));
 
-  /** This function is called periodically during operator control. */
-  @Override
-  public void teleopPeriodic() {}
+		if (setPWM) {
+			Helper.solenoidPWM(armExtend, ps4.getLeftX());
+			Helper.solenoidPWM(armRetract, -ps4.getLeftX());
+		}
+		setPWM=!setPWM;
 
-  /** This function is called once when the robot is disabled. */
-  @Override
-  public void disabledInit() {}
+		double lr2 = Helper.scaleInput(ps4.getL2Axis())-Helper.scaleInput(ps4.getR2Axis());
+		if (ps4.getL1Button()&&ps4.getR1Button()) {
+			intake.arcadeDrive(0, lr2, false);
+		}
+		else if (ps4.getL1Button()) {
+			intake.arcadeDrive(lr2, -1, false);
+		}
+		else if (ps4.getL2Button()) {
+			intake.arcadeDrive(lr2, 1, false);
+		}
+		else {
+			intake.arcadeDrive(lr2, 0, false);
+		}
+	}
 
-  /** This function is called periodically when disabled. */
-  @Override
-  public void disabledPeriodic() {}
+	@Override
+	public void autonomousInit()
+	{
+	time.reset();
+	time.start();
+	} 
 
-  /** This function is called once when test mode is enabled. */
-  @Override
-  public void testInit() {}
+	@Override
+	public void autonomousPeriodic()
+	{
+	
+	}
 
-  /** This function is called periodically during test mode. */
-  @Override
-  public void testPeriodic() {}
+	@Override
+	public void testPeriodic()
+	{
+
+	}
 }
