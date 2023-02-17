@@ -32,6 +32,7 @@ public class Robot extends TimedRobot
 	CANSparkMax leftIntake = new CANSparkMax(8, MotorType.kBrushless);
 	CANSparkMax rightIntake = new CANSparkMax(9, MotorType.kBrushless);
 	DifferentialDrive intake = new DifferentialDrive(leftIntake, rightIntake);
+	
 	Solenoid armExtend = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
 	Solenoid armRetract = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
 	Boolean setPWM = true;
