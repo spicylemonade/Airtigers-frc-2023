@@ -429,7 +429,7 @@ def scoring_Controller(x,xDot,y,yDot,theta,thetaDot,arm_theta,arm_thetaDot,l1,l1
     return U
 
 def mobility_Controller(x,xDot,y,yDot,theta,thetaDot,arm_theta,arm_thetaDot,l1,l1Dot):
-    global mobility
+
     # To get mobility points we must drive backwards over the charging station and leave the community
     x_ref = (96.75+24)*(0.0254); # this is the target position to score (DRIVE ROBOT TO THIS POINT)
     arm_theta_ref = 70*(math.pi/180); # this is the target arm orientation (DRIVE THE ARM TO THIS ORIENTATION)
@@ -464,23 +464,14 @@ def mobility_Controller(x,xDot,y,yDot,theta,thetaDot,arm_theta,arm_thetaDot,l1,l
 
 
 def balanced_Controller(x,xDot,y,yDot,theta,thetaDot,balanced,arm_theta,arm_thetaDot,l1,l1Dot):
-    # To get mobility points we must drive backwards over the charging station and leave the community
-    x_ref = (56.75)*(0.0254); # this is the target position to score (DRIVE ROBOT TO THIS POINT)
-    arm_theta_ref = 70*(math.pi/180); # this is the target arm orientation (DRIVE THE ARM TO THIS ORIENTATION)
-    arm_length_ref = Robot.arm_length_min; # this is the target arm length
+    # To balance the robot on the charging station, we must drive forward onto the charging station and changle our position unitl the platform is level
+    U = np.zeros((6,1)); # Predefine the robot's control input as a vector
+    x_ref = (96.75)*(0.0254); # this is the target position to score (DRIVE ROBOT TO THIS POINT)
+   
 
     K_drive = -1.5; # this is the control gain for driving the robot during scroring
     K_speed = 0.6; # this is the control gain for the robots speed.
-    U = np.zeros((6,1)); # Predefine the robot's control input as a vector
     # compute input
-    ref = np.array([x_ref,0,arm_theta_ref,0,arm_length_ref,0]); # vector of references
-    X = np.array([x,xDot,arm_theta,arm_thetaDot,l1,l1Dot]); # vector of actual states
-    err = ref-X;
-
-    U[0] = K_drive*err[0] + K_speed*err[1];
-    U[1] = -U[0];
-  
-
     return U
 
 scored,mobility,balanced = False,False,False;
