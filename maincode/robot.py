@@ -4,7 +4,6 @@ import math
 import wpilib
 from wpilib import PneumaticsModuleType, Compressor, Joystick, DoubleSolenoid, drive,interfaces
 from rev import CANSparkMax, RelativeEncoder, CANSparkMaxLowLevel
-
 class MyRobot(wpilib.TimedRobot):
     """Main robot class."""
 
@@ -12,10 +11,10 @@ class MyRobot(wpilib.TimedRobot):
     def robotInit(self):
         self.joystick = Joystick(0)
         self.controller = interfaces.GenericHID(1)
-        top_left = CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless)
-        bottom_left = CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless)
-        top_right = CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless)
-        bottom_right = CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless)
+        self.top_left = CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless)
+        self.bottom_left = CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless)
+        self.top_right = CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless)
+        self.bottom_right = CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless)
         self.arm = CANSparkMax(5,CANSparkMaxLowLevel.MotorType.kBrushless)
 
 
@@ -26,20 +25,20 @@ class MyRobot(wpilib.TimedRobot):
 
         self.mec_drive = drive.MecanumDrive(top_left, bottom_left, top_right, bottom_right)
 
-        tlm = top_left.getEncoder()
-        blm = bottom_left.getEncoder()
-        trm = top_right.getEncoder()
-        brm = bottom_right.getEncoder()
+        self.tlm = top_left.getEncoder()
+        self.blm = bottom_left.getEncoder()
+        self.trm = top_right.getEncoder()
+        self.brm = bottom_right.getEncoder()
 
-        tlm.setPosition(0.0)
-        blm.setPosition(0.0)
-        trm.setPosition(0.0)
-        brm.setPosition(0.0)
+        self.tlm.setPosition(0.0)
+        self.blm.setPosition(0.0)
+        self.trm.setPosition(0.0)
+        self.brm.setPosition(0.0)
         """Robot-wide initialization code should go here."""
-        self.comp = Compressor(0, PneumaticsModuleType.CTREPCM)
-        self.comp.enableDigital()
-
-        self.doubles = DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1)
+        # self.comp = Compressor(0, PneumaticsModuleType.CTREPCM)
+        # self.comp.enableDigital()
+        #
+        # self.doubles = DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1)
 
 
     def autonomousInit(self):
@@ -63,6 +62,10 @@ class MyRobot(wpilib.TimedRobot):
         pass
 
     def teleopInit(self):
+        self.tlm.setPosition(0.0)
+        self.blm.setPosition(0.0)
+        self.trm.setPosition(0.0)
+        self.brm.setPosition(0.0)
 
         """Called only at the beginning of teleoperated mode."""
         # self.loops = 0
@@ -72,12 +75,12 @@ class MyRobot(wpilib.TimedRobot):
     def teleopPeriodic(self):
         """Called every 20ms in teleoperated mode"""
 
-        if self.controller.getRawButton(5):
-            self.doubles.set(DoubleSolenoid.Value.kForward)
-        elif self.controller.getRawButton(6):
-            self.doubles.set(DoubleSolenoid.Value.kReverse)
-        else:
-            self.doubles.set(DoubleSolenoid.Value.kOff)
+        # if self.controller.getRawButton(5):
+        #     self.doubles.set(DoubleSolenoid.Value.kForward)
+        # elif self.controller.getRawButton(6):
+        #     self.doubles.set(DoubleSolenoid.Value.kReverse)
+        # else:
+        #     self.doubles.set(DoubleSolenoid.Value.kOff)
 
         # self.driver()
         joy_y = self.joystick.getY()
@@ -100,7 +103,16 @@ class MyRobot(wpilib.TimedRobot):
 
 
         # Move a motor with a Joystick
-
+        #self.logger.info("encoder: ",self.tlm)
+        #self.logger.info(self.tlm.getVelocity())
+        #self.logger.info(self.tlm.getPosition())
+        #self.logger.info(self.blm.getPosition())
+        self.bottom_left.set(1*(6.78-self.blm.getPosition())/(6.78/2))
+        self.top_left.set(1*(6.78-self.tlm.getPosition())/(6.78/2))
+        self.bottom_right.set(1*(6.78-self.brm.getPosition())/(6.78/2))
+        self.top_right.set(1*(6.78-self.trm.getPosition())/(6.78/2))
+        #self.tlm.setPosition(0)
+        #6.78
         # self.motor.set(self.lstick.getY())
         #
         # # Print out the number of loop iterations passed every second
