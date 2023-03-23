@@ -38,9 +38,9 @@ class MyRobot(wpilib.TimedRobot):
         self.bottom_right = CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless)
         self.arm = CANSparkMax(5, CANSparkMaxLowLevel.MotorType.kBrushless)
 
-        self.claw_lead =  CANSparkMax(17, CANSparkMaxLowLevel.MotorType.kBrushless)
-        self.claw1 = PWMTalonSRX(7)
-        self.claw2=  PWMTalonSRX(8)
+        self.claw_lead =  CANSparkMax(6, CANSparkMaxLowLevel.MotorType.kBrushless)
+        self.claw1 = PWMTalonSRX(15)
+        #self.claw2=  PWMTalonSRX(8)
 
 
         self.armlimit_bottom = DigitalInput(1)
@@ -59,7 +59,7 @@ class MyRobot(wpilib.TimedRobot):
 
         self.comp = Compressor(0, PneumaticsModuleType.CTREPCM)
 
-        #self.comp.enableDigital()
+        self.comp.enableDigital()
 
         self.doubles = DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1)
 
@@ -207,26 +207,21 @@ class MyRobot(wpilib.TimedRobot):
             self.joy_z = 0
         self.mec_drive.driveCartesian(self.joy_y * -0.7, self.joy_x * 0.7,self.joy_z * 0.7)  # cant be on at same time as controll_rev()
         #self.balancing()
-        #self.clawer()
+        self.clawer()
 
         #arm
-        if not self.controller.getRawButton(1):
-            self.arm_controller()
-        else:
-            if not self.arm_encoder.getPosition()*self.counts2deg+self.arm_offset_angle >= self.preSet_middlePeg:
-                self.arm.set(0.5)
-                self.arm3 = True
-                self.arm1 = False
-                self.arm2 = False
+
+        self.arm_controller()
+
 
 
         #claw
-        #self.clawer()
+
 
         # Move a motor with a Joystick
         # self.controll_rev(0.3,2*math.pi*4)
 
-        self.logger.info(self.navx.getPitch())
+        #self.logger.info(self.navx.getPitch())
         if self.controller.getRawButton(8):
             self.arm1 = True
             self.arm2 = False
@@ -290,28 +285,27 @@ class MyRobot(wpilib.TimedRobot):
 
     def arm_controller(self):
         if self.arm1:
-            self.arm_orientation(0.7, self.arm_encoder.getPosition(), self.preSet_topPeg)
+            self.arm_orientation(0.9, self.arm_encoder.getPosition(), self.preSet_topPeg)
         elif self.arm2:
-            self.arm_orientation(0.7, self.arm_encoder.getPosition(), self.preSet_middlePeg)
+            self.arm_orientation(0.9, self.arm_encoder.getPosition(), self.preSet_middlePeg)
         elif self.arm3:
-            self.arm.set(0.000001)
+            self.arm.set(0.0001)
         else:
             self.arm.set(0)
         # self.arm.set(power*((r-x)+power_2*(dx))/r)
     def clawer(self):
 
         if self.xbox.getRawButton(4):
-            self.claw_lead.set(-0.15)
+            self.claw_lead.set(-0.5)
         elif self.xbox.getRawButton(5):
-            self.claw_lead.set(0.15)
+            self.claw_lead.set(0.5)
         else:
             self.claw_lead.set(0)
-        left_axis=self.xbox.getRawAxis(2)
-        #self.claw_lead.set(0.5 * ((6 - self.claw_lead.getEncoder().getPosition()) / 6))
-        #left_axis = 0 if left_axis<= 0.1 else left_axis
-        #right_axis=self.xbox.getRawAxis(3)
-        #right_axis = 0 if right_axis<= 0.1 else right_axis
-        #self.claw1.set(left_axis)
+        if self.xbox.getRawButton(6):
+            self.claw1.set(0.5)
+        else:
+            self.claw1.set(0)
+
 
 
 
